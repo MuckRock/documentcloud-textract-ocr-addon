@@ -1,5 +1,5 @@
 title: Azure Document Intelligence OCR
-description: This Add-On uses Azure's Document Intelligence API to OCR documents. The document(s) must be public to be processed. 
+description: This Add-On uses Azure's Document Intelligence API to OCR documents. The document(s) must be public to be processed. This Add-On uses 1 AI Credit per page. 
 type: object
 documents:
   - selected
