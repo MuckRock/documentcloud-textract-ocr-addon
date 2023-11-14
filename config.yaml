@@ -10,3 +10,6 @@ categories:
   - premium
 # Acceptable categories are premium, ai, export, bulk, file,  monitor, statistical, and extraction. 
 # You can read more about DocumentCloud Add-On categories here: https://www.documentcloud.org/help/add-ons#types-of-add-ons
+cost:
+  amount: 1
+  unit: page
