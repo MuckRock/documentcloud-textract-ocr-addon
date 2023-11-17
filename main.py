@@ -67,8 +67,7 @@ class DocumentIntelligence(AddOn):
         )
         for document in self.get_documents():
             poller = document_analysis_client.begin_analyze_document(
-                    "prebuilt-read", document=document.pdf, content_type="application/pdf"
-            )
+                    "prebuilt-read", document=document.pdf)
             result = poller.result()
             pages = []
             for i, page in enumerate(result.pages):
