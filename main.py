@@ -66,12 +66,8 @@ class DocumentIntelligence(AddOn):
             endpoint=endpoint, credential=AzureKeyCredential(key)
         )
         for document in self.get_documents():
-            if document.access != "public":
-                self.set_message("Document must be public")
-                return
-            form_url = document.pdf_url
-            poller = document_analysis_client.begin_analyze_document_from_url(
-                "prebuilt-read", form_url
+            poller = document_analysis_client.begin_analyze_document(
+                    "prebuilt-read", document=document.pdf, content_type="application/pdf"
             )
             result = poller.result()
             pages = []
