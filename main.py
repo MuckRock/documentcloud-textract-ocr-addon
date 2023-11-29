@@ -4,9 +4,11 @@ to perform OCR on documents within DocumentCloud
 """
 import os
 import re
+
+from documentcloud.addon import AddOn
+
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
-from documentcloud.addon import AddOn
 
 
 class DocumentIntelligence(AddOn):
@@ -20,19 +22,13 @@ class DocumentIntelligence(AddOn):
                 "select them and run again."
             )
             return False
-        elif not self.org_id:
-            self.set_message("No organization to charge.")
-            return False
         else:
             num_pages = 0
             for document in self.get_documents():
                 num_pages += document.page_count
-            resp = self.client.post(
-                f"organizations/{self.org_id}/ai_credits/",
-                json={"ai_credits": num_pages},
-            )
-            if resp.status_code != 200:
-                self.set_message("Error charging AI credits.")
+            try:
+                self.charge_credits(num_pages)
+            except ValueError:
                 return False
         return True
 
