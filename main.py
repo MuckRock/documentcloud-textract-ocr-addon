@@ -4,6 +4,7 @@ to perform OCR on documents within DocumentCloud
 """
 import os
 import re
+import time
 
 from documentcloud.addon import AddOn
 
