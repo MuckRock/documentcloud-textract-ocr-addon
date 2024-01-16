@@ -95,8 +95,16 @@ class DocumentIntelligence(AddOn):
 
                 pages.append(dc_page)
 
-            resp = self.client.patch(f"documents/{document.id}/", json={"pages": pages})
-            resp.raise_for_status()
+            page_chunk_size = 100  # Set your desired chunk size
+            for i in range(0, len(pages), page_chunk_size):
+                chunk = pages[i:i + page_chunk_size]
+                resp = self.client.patch(f"documents/{document.id}/", json={"pages": chunk})
+                resp.raise_for_status()
+                while True:
+                    time.sleep(10)
+                    if document.status == "success": # Break out of for loop if document status becomes success
+                        break
+               
 
 
 if __name__ == "__main__":
