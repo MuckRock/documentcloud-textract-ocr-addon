@@ -25,16 +25,15 @@ class DocumentIntelligence(AddOn):
                 "select them and run again."
             )
             return False
-        else:
-            num_pages = 0
-            for document in self.get_documents():
-                num_pages += document.page_count
-            try:
-                self.charge_credits(num_pages)
-            except ValueError:
-                return False
-            except APIError:
-                return False
+        num_pages = 0
+        for document in self.get_documents():
+            num_pages += document.page_count
+        try:
+            self.charge_credits(num_pages)
+        except ValueError:
+            return False
+        except APIError:
+            return False
         return True
 
     def convert_coordinates(self, polygon, page_width, page_height):
@@ -68,7 +67,8 @@ class DocumentIntelligence(AddOn):
         )
         for document in self.get_documents():
             poller = document_analysis_client.begin_analyze_document(
-                    "prebuilt-read", document=document.pdf)
+                "prebuilt-read", document=document.pdf
+            )
             result = poller.result()
             pages = []
             for i, page in enumerate(result.pages):
@@ -102,14 +102,17 @@ class DocumentIntelligence(AddOn):
 
             page_chunk_size = 100  # Set your desired chunk size
             for i in range(0, len(pages), page_chunk_size):
-                chunk = pages[i:i + page_chunk_size]
-                resp = self.client.patch(f"documents/{document.id}/", json={"pages": chunk})
+                chunk = pages[i : i + page_chunk_size]
+                resp = self.client.patch(
+                    f"documents/{document.id}/", json={"pages": chunk}
+                )
                 resp.raise_for_status()
                 while True:
                     time.sleep(10)
-                    if document.status == "success": # Break out of for loop if document status becomes success
+                    if (
+                        document.status == "success"
+                    ):  # Break out of for loop if document status becomes success
                         break
-               
 
 
 if __name__ == "__main__":
