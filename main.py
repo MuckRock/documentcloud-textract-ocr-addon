@@ -4,9 +4,11 @@ to perform OCR on documents within DocumentCloud
 """
 import os
 import re
+import sys
 import time
 
 from documentcloud.addon import AddOn
+from documentcloud.exceptions import APIError
 
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
@@ -30,6 +32,8 @@ class DocumentIntelligence(AddOn):
             try:
                 self.charge_credits(num_pages)
             except ValueError:
+                return False
+            except APIError:
                 return False
         return True
 
@@ -55,8 +59,8 @@ class DocumentIntelligence(AddOn):
     def main(self):
         """The main add-on functionality goes here."""
         if not self.validate():
-            # if not validated, return immediately
-            return
+            self.set_message("You do not have sufficient AI credits to run this Add-On")
+            sys.exit(0)
         key = os.environ.get("KEY")
         endpoint = os.environ.get("TOKEN")
         document_analysis_client = DocumentAnalysisClient(
