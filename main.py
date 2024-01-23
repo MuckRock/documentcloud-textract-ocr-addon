@@ -24,7 +24,7 @@ class DocumentIntelligence(AddOn):
                 "It looks like no documents were selected. Search for some or "
                 "select them and run again."
             )
-            return False
+            sys.exit(0)
         num_pages = 0
         for document in self.get_documents():
             num_pages += document.page_count
