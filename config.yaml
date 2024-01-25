@@ -4,7 +4,6 @@ instructions: ''
 type: object
 documents:
   - selected
-  - query
 properties: {}
 categories: 
   - extraction
