@@ -65,6 +65,7 @@ class DocumentIntelligence(AddOn):
         document_analysis_client = DocumentAnalysisClient(
             endpoint=endpoint, credential=AzureKeyCredential(key)
         )
+        to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
             poller = document_analysis_client.begin_analyze_document(
                 "prebuilt-read", document=document.pdf
@@ -113,7 +114,9 @@ class DocumentIntelligence(AddOn):
                         document.status == "success"
                     ):  # Break out of for loop if document status becomes success
                         break
-
+            if to_tag:
+                document.data["ocr_engine"] = "azure"
+                document.save()
 
 if __name__ == "__main__":
     DocumentIntelligence().main()
