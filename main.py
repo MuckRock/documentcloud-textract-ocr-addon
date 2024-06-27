@@ -9,6 +9,7 @@ import time
 import requests
 from PIL import Image
 from documentcloud.addon import AddOn
+from documentcloud.common.path import doc_path
 from documentcloud.exceptions import APIError
 from textractor import Textractor
 
@@ -67,8 +68,7 @@ class Textract(AddOn):
             pdf = self.download_file(s3_url, f"{document.title}.pdf")
 
             document_info = extractor.start_document_text_detection(
-                f"{document.title}.pdf",
-                s3_upload_path="s3://textract-ocr/temp/",
+                f"s3.documentcloud.org/documents/{document.id}/"
             )
             print(document_info)
             """pages = []
