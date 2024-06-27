@@ -63,11 +63,11 @@ class Textract(AddOn):
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
             for page in range(1, document.pages + 1):
-                image_data = document.get_large_image(page_number)
-                gif_filename = f"{document.id}-page{page_number}.gif"
+                image_data = document.get_large_image(page)
+                gif_filename = f"{document.id}-page{page}.gif"
                 with open(gif_filename, 'wb') as f:
                     f.write(image_data)
-                png_filename = f"{document.id}-page{page_number}.png"
+                png_filename = f"{document.id}-page{page}.png"
                 self.convert_to_png(gif_filename, png_filename)
                 image = Image.open(png_filename)
                 page_info = extractor.detect_document_text(file_source=image)
