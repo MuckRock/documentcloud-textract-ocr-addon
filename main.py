@@ -24,8 +24,8 @@ class Textract(AddOn):
         with open(credentials_file_path, "w") as file:
             file.write(credentials)
 
-    def download_image(self, url, filename):
-        """Download an image from a URL and save it locally."""
+    def download_file(self, url, filename):
+        """Download an file from a URL and save it locally."""
         response = requests.get(url, timeout=20)
         with open(filename, "wb") as f:
             f.write(response.content)
@@ -62,7 +62,15 @@ class Textract(AddOn):
         extractor = Textractor(profile_name="default", region_name="us-east-1")
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
-            pages = []
+            s3_url = document.pdf_url
+            pdf = self.download_file(s3_url, f"{document.title}.pdf")
+
+            document_info = extractor.start_document_text_detection(
+                f"{document.title}.pdf",
+                s3_upload_path="s3://textract-ocr/temp/",
+            )
+            print(document_info)
+            """pages = []
             for page in range(1, document.pages + 1):
                 image_data = document.get_large_image(page)
                 gif_filename = f"{document.id}-page{page}.gif"
@@ -93,6 +101,7 @@ class Textract(AddOn):
                 print(dc_page)
                 # Append dc_page to pages list
                 pages.append(dc_page)
+            """
             page_chunk_size = 100  # Set your desired chunk size
             for i in range(0, len(pages), page_chunk_size):
                 chunk = pages[i : i + page_chunk_size]
