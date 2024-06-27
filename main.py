@@ -76,23 +76,22 @@ class Textract(AddOn):
                 # Create dc_page dictionary
                 dc_page = {
                     "page_number": page,
-                    "text": "\n".join([line.text for line in page_info.blocks if line.block_type == "LINE"]),
+                    "text": page_info.text,
                     "ocr": "textract",
                     "positions": []  # To store word positions
                 }
                 print(dc_page)
-                for block in page_info.blocks:
-                    if block.block_type == "WORD":
-                        word_info = {
-                            "text": block.text,
-                            "x1": block.geometry.bounding_box.left,
-                            "x2": block.geometry.bounding_box.left + block.geometry.bounding_box.width,
-                            "y1": block.geometry.bounding_box.top,
-                            "y2": block.geometry.bounding_box.top + block.geometry.bounding_box.height,
-                            "confidence": block.confidence,
-                            "type": block.text_type,
-                        }
-                        dc_page["positions"].append(word_info)
+                for word in page_info.words:
+                    word_info = {
+                        "text": word.text,
+                        "x1": word.bbox.left,
+                        "x2": word.bbox.left + word.bbox.width,
+                        "y1": word.bbox.top,
+                        "y2": word.bbox.top + word.bbox.height,
+                        "confidence": word.confidence,
+                        "type": word.text_type,
+                    }
+                dc_page["positions"].append(word_info)
                 
                 # Append dc_page to pages list
                 pages.append(dc_page)
