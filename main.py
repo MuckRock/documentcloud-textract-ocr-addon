@@ -9,7 +9,6 @@ import time
 import requests
 from PIL import Image
 from documentcloud.addon import AddOn
-from documentcloud.common.path import doc_path
 from documentcloud.exceptions import APIError
 from textractor import Textractor
 
