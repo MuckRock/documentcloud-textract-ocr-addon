@@ -89,9 +89,8 @@ class Textract(AddOn):
                         "y2": (word.bbox.y + word.bbox.height) / image.height,
                         "confidence": word.confidence,
                     }
-                    print(word_info)
-                dc_page["positions"].append(word_info)
-                # print(dc_page)
+                    dc_page["positions"].append(word_info)
+                print(dc_page)
                 # Append dc_page to pages list
                 pages.append(dc_page)
             page_chunk_size = 100  # Set your desired chunk size
