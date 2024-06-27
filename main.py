@@ -67,7 +67,7 @@ class Textract(AddOn):
             pdf = self.download_file(s3_url, f"{document.title}.pdf")
 
             document_info = extractor.start_document_text_detection(
-                f"s3://s3.documentcloud.org/documents/{document.id}/"
+                f"s3://s3.documentcloud.org/documents/{document.id}/{document.title}.pdf"
             )
             print(document_info)
             """pages = []
