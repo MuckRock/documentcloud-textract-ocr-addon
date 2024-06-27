@@ -83,10 +83,10 @@ class Textract(AddOn):
                 for word in page_info.words:
                     word_info = {
                         "text": word.text,
-                        "x1": word.bbox.x
-                        "x2": (word.bbox.x + word.bbox.width)
-                        "y1": word.bbox.y
-                        "y2": (word.bbox.y + word.bbox.height)
+                        "x1": word.bbox.x,
+                        "x2": (word.bbox.x + word.bbox.width),
+                        "y1": word.bbox.y,
+                        "y2": (word.bbox.y + word.bbox.height),
                         "confidence": word.confidence,
                     }
                     dc_page["positions"].append(word_info)
