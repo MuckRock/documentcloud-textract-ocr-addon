@@ -91,7 +91,7 @@ class Textract(AddOn):
                         "confidence": word.confidence,
                     }
                 dc_page["positions"].append(word_info)
-                
+                print(dc_page)
                 # Append dc_page to pages list
                 pages.append(dc_page)
             page_chunk_size = 100  # Set your desired chunk size
