@@ -62,7 +62,7 @@ class Textract(AddOn):
         extractor = Textractor(profile_name="default", region_name="us-east-1")
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
-            for page in document.pages:
+            for page in range(1, document.pages + 1)
                 image_data = document.get_large_image(page_number)
                 gif_filename = f"{document.id}-page{page_number}.gif"
                 with open(gif_filename, 'wb') as f:
