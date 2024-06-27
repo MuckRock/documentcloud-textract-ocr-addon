@@ -84,10 +84,10 @@ class Textract(AddOn):
                 for word in page_info.words:
                     word_info = {
                         "text": word.text,
-                        "x1": word.bbox.x / image.width
-                        "x2": (word.bbox.x + word.bbox.width) / image.width
-                        "y1": word.bbox.y / image.height
-                        "y2": (word.bbox.y + word.bbox.height) / image.height
+                        "x1": word.bbox.x / image.width,
+                        "x2": (word.bbox.x + word.bbox.width) / image.width,Textract
+                        "y1": word.bbox.y / image.height,
+                        "y2": (word.bbox.y + word.bbox.height) / image.height,
                         "confidence": word.confidence,
                         "type": word.text_type,
                     }
