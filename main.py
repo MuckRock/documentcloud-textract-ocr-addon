@@ -75,7 +75,7 @@ class Textract(AddOn):
 
                 # Create dc_page dictionary
                 dc_page = {
-                    "page_number": page,
+                    "page_number": page-1,
                     "text": page_info.text,
                     "ocr": "textract",
                     "positions": []  # To store word positions
