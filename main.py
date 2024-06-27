@@ -6,6 +6,7 @@ import os
 import re
 import sys
 import time
+import requests
 from PIL import Image
 from documentcloud.addon import AddOn
 from documentcloud.exceptions import APIError
