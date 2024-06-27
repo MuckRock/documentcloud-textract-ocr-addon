@@ -62,6 +62,7 @@ class Textract(AddOn):
         extractor = Textractor(profile_name="default", region_name="us-east-1")
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
+            pages = []
             for page in range(1, document.pages + 1):
                 image_data = document.get_large_image(page)
                 gif_filename = f"{document.id}-page{page}.gif"
@@ -71,7 +72,30 @@ class Textract(AddOn):
                 self.convert_to_png(gif_filename, png_filename)
                 image = Image.open(png_filename)
                 page_info = extractor.detect_document_text(file_source=image)
-                print(page_info)
+
+                # Create dc_page dictionary
+                dc_page = {
+                    "page_number": page_num,
+                    "text": "\n".join([line.text for line in page_info.blocks if line.block_type == "LINE"]),
+                    "ocr": "textract",
+                    "positions": []  # To store word positions
+                }
+                print(dc_page)
+                for block in page_info.blocks:
+                    if block.block_type == "WORD":
+                        word_info = {
+                            "text": block.text,
+                            "x1": block.geometry.bounding_box.left,
+                            "x2": block.geometry.bounding_box.left + block.geometry.bounding_box.width,
+                            "y1": block.geometry.bounding_box.top,
+                            "y2": block.geometry.bounding_box.top + block.geometry.bounding_box.height,
+                            "confidence": block.confidence,
+                            "type": block.text_type,
+                        }
+                        dc_page["positions"].append(word_info)
+                
+                # Append dc_page to pages list
+                pages.append(dc_page)
             """if to_tag:
                 document.data["ocr_engine"] = "textract"
                 document.save()"""
