@@ -89,7 +89,6 @@ class Textract(AddOn):
                         "y1": word.bbox.y / image.height,
                         "y2": (word.bbox.y + word.bbox.height) / image.height,
                         "confidence": word.confidence,
-                        "type": word.text_type,
                     }
                 dc_page["positions"].append(word_info)
                 
