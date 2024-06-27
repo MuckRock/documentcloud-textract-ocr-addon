@@ -95,9 +95,22 @@ class Textract(AddOn):
                 
                 # Append dc_page to pages list
                 pages.append(dc_page)
-            """if to_tag:
+            page_chunk_size = 100  # Set your desired chunk size
+            for i in range(0, len(pages), page_chunk_size):
+                chunk = pages[i : i + page_chunk_size]
+                resp = self.client.patch(
+                    f"documents/{document.id}/", json={"pages": chunk}
+                )
+                resp.raise_for_status()
+                while True:
+                    time.sleep(10)
+                    if (
+                        document.status == "success"
+                    ):  # Break out of for loop if document status becomes success
+                        break
+            if to_tag:
                 document.data["ocr_engine"] = "textract"
-                document.save()"""
+                document.save()
 
 if __name__ == "__main__":
     Textract().main()
