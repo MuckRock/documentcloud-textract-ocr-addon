@@ -1,22 +1,39 @@
 """
-This Add-On uses Azure's Document Intelligence API
+This Add-On uses Amazon Textract
 to perform OCR on documents within DocumentCloud
 """
 import os
 import re
 import sys
 import time
-
+from PIL import Image
 from documentcloud.addon import AddOn
 from documentcloud.exceptions import APIError
+from textractor import Textractor
 
-from azure.ai.formrecognizer import DocumentAnalysisClient
-from azure.core.credentials import AzureKeyCredential
+class Textract(AddOn):
+    """Class for Textract OCR Add-On"""
+    def setup_credential_file(self):
+        """Setup credential files for AWS CLI"""
+        credentials = os.environ["TOKEN"]
+        credentials_file_path = os.path.expanduser("~/.aws/credentials")
+        # Create the ~/.aws directory if it doesn't exist
+        aws_directory = os.path.dirname(credentials_file_path)
+        if not os.path.exists(aws_directory):
+            os.makedirs(aws_directory)
+        with open(credentials_file_path, "w") as file:
+            file.write(credentials)
 
+    def download_image(self, url, filename):
+        """Download an image from a URL and save it locally."""
+        response = requests.get(url, timeout=20)
+        with open(filename, "wb") as f:
+            f.write(response.content)
 
-class DocumentIntelligence(AddOn):
-    """Class for Document Intelligence Add-On"""
-
+    def convert_to_png(self, gif_filename, png_filename):
+        """Convert a GIF image to PNG format."""
+        gif_image = Image.open(gif_filename)
+        gif_image.save(png_filename, "PNG")
     def validate(self):
         """Validate that we can run the OCR"""
         if self.get_document_count() is None:
@@ -36,87 +53,28 @@ class DocumentIntelligence(AddOn):
             return False
         return True
 
-    def convert_coordinates(self, polygon, page_width, page_height):
-        """Converts Azure's absolute coordinates to relative
-        page coordinates used by Documentcloud
-        """
-        x_values = [point.x for point in polygon]
-        y_values = [point.y for point in polygon]
-
-        x1 = min(x_values)
-        x2 = max(x_values)
-        y1 = min(y_values)
-        y2 = max(y_values)
-
-        x1_percentage = max(0, min(1, (x1 / page_width)))
-        x2_percentage = max(0, min(1, (x2 / page_width)))
-        y1_percentage = max(0, min(1, (y1 / page_height)))
-        y2_percentage = max(0, min(1, (y2 / page_height)))
-
-        return x1_percentage, x2_percentage, y1_percentage, y2_percentage
-
     def main(self):
         """The main add-on functionality goes here."""
         if not self.validate():
             self.set_message("You do not have sufficient AI credits to run this Add-On")
             sys.exit(0)
-        key = os.environ.get("KEY")
-        endpoint = os.environ.get("TOKEN")
-        document_analysis_client = DocumentAnalysisClient(
-            endpoint=endpoint, credential=AzureKeyCredential(key)
-        )
+        self.setup_credential_file()
+        extractor = Textractor(profile_name="default", region_name="us-east-1")
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
-            poller = document_analysis_client.begin_analyze_document(
-                "prebuilt-read", document=document.pdf
-            )
-            result = poller.result()
-            pages = []
-            for i, page in enumerate(result.pages):
-                dc_page = {
-                    "page_number": i,
-                    "text": "\n".join(
-                        [
-                            ""
-                            if re.match(r"^[:.\-]*$", line.content.strip())
-                            else line.content
-                            for line in page.lines
-                        ]
-                    ),
-                    "ocr": "azuredi",
-                    "positions": [],
-                }
-                for word in page.words:
-                    x1, x2, y1, y2 = self.convert_coordinates(
-                        word.polygon, page.width, page.height
-                    )
-                    position_info = {
-                        "text": word.content,
-                        "x1": x1,
-                        "x2": x2,
-                        "y1": y1,
-                        "y2": y2,
-                    }
-                    dc_page["positions"].append(position_info)
-
-                pages.append(dc_page)
-
-            page_chunk_size = 100  # Set your desired chunk size
-            for i in range(0, len(pages), page_chunk_size):
-                chunk = pages[i : i + page_chunk_size]
-                resp = self.client.patch(
-                    f"documents/{document.id}/", json={"pages": chunk}
-                )
-                resp.raise_for_status()
-                while True:
-                    time.sleep(10)
-                    if (
-                        document.status == "success"
-                    ):  # Break out of for loop if document status becomes success
-                        break
-            if to_tag:
-                document.data["ocr_engine"] = "azure"
-                document.save()
+            for page in document.pages:
+                image_data = document.get_large_image(page_number)
+                gif_filename = f"{document.id}-page{page_number}.gif"
+                with open(gif_filename, 'wb') as f:
+                    f.write(image_data)
+                png_filename = f"{document.id}-page{page_number}.png"
+                self.convert_to_png(gif_filename, png_filename)
+                image = Image.open(png_filename)
+                page_info = extractor.detect_document_text(file_source=image)
+                print(page_info)
+            """if to_tag:
+                document.data["ocr_engine"] = "textract"
+                document.save()"""
 
 if __name__ == "__main__":
-    DocumentIntelligence().main()
+    Textract().main()

@@ -1,5 +1,5 @@
-title: Azure Document Intelligence OCR
-description: This Add-On uses Azure's Document Intelligence API to OCR documents.
+title: Textract OCR
+description: This Add-On uses Amazon Textract to OCR documents.
 instructions: ''
 type: object
 documents:
@@ -8,7 +8,7 @@ properties:
   to_tag:
     title: Tag OCR'd documents?
     type: boolean
-    description: "If selected, the key/value pair of ocr_engine:azure will be added to the document as metadata"
+    description: "If selected, the key/value pair of ocr_engine:textract will be added to the document as metadata"
 categories: 
   - extraction
   - premium
