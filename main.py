@@ -80,7 +80,6 @@ class Textract(AddOn):
                     "ocr": "textract",
                     "positions": []  # To store word positions
                 }
-                print(dc_page)
                 for word in page_info.words:
                     word_info = {
                         "text": word.text,
@@ -90,8 +89,9 @@ class Textract(AddOn):
                         "y2": (word.bbox.y + word.bbox.height) / image.height,
                         "confidence": word.confidence,
                     }
+                    print(word_info)
                 dc_page["positions"].append(word_info)
-                print(dc_page)
+                # print(dc_page)
                 # Append dc_page to pages list
                 pages.append(dc_page)
             page_chunk_size = 100  # Set your desired chunk size
