@@ -3,11 +3,8 @@ This Add-On uses Amazon Textract
 to perform OCR on documents within DocumentCloud
 """
 import os
-import re
 import sys
 import time
-import requests
-from PIL import Image
 from documentcloud.addon import AddOn
 from documentcloud.exceptions import APIError
 from textractor import Textractor
@@ -22,19 +19,9 @@ class Textract(AddOn):
         aws_directory = os.path.dirname(credentials_file_path)
         if not os.path.exists(aws_directory):
             os.makedirs(aws_directory)
-        with open(credentials_file_path, "w") as file:
+        with open(credentials_file_path, "w", encoding="utf-8") as file:
             file.write(credentials)
 
-    def download_file(self, url, filename):
-        """Download an file from a URL and save it locally."""
-        response = requests.get(url, timeout=20)
-        with open(filename, "wb") as f:
-            f.write(response.content)
-
-    def convert_to_png(self, gif_filename, png_filename):
-        """Convert a GIF image to PNG format."""
-        gif_image = Image.open(gif_filename)
-        gif_image.save(png_filename, "PNG")
     def validate(self):
         """Validate that we can run the OCR"""
         if self.get_document_count() is None:
@@ -63,13 +50,10 @@ class Textract(AddOn):
         extractor = Textractor(profile_name="default", region_name="us-east-1")
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
-            s3_url = document.pdf_url
-            pdf = self.download_file(s3_url, f"{document.slug}.pdf")
-
             document_info = extractor.start_document_text_detection(
                 f"s3://s3.documentcloud.org/documents/{document.id}/{document.slug}.pdf", save_image=False
             )
-            
+
             dc_pages = []
             for page in document_info.pages:
                 dc_page = {
@@ -81,16 +65,16 @@ class Textract(AddOn):
                 for word in page.words:
                     word_info = {
                         "text": word.text,
-                        "x1": word.bbox.x,
-                        "x2": (word.bbox.x + word.bbox.width),
-                        "y1": word.bbox.y,
-                        "y2": (word.bbox.y + word.bbox.height),
+                        "x1": max(0, min(1, word.bbox.x)),
+                        "x2": max(0, min(1, word.bbox.x + word.bbox.width)),
+                        "y1": max(0, min(1, word.bbox.y)),
+                        "y2": max(0, min(1, word.bbox.y + word.bbox.height)),
                         "confidence": word.confidence,
                     }
                     dc_page["positions"].append(word_info)
                 dc_pages.append(dc_page)
-           
-            page_chunk_size = 50  # Set your desired chunk size
+
+            page_chunk_size = 50 # Set your desired chunk size
             for i in range(0, len(dc_pages), page_chunk_size):
                 chunk = dc_pages[i : i + page_chunk_size]
                 resp = self.client.patch(
@@ -107,37 +91,5 @@ class Textract(AddOn):
             if to_tag:
                 document.data["ocr_engine"] = "textract"
                 document.save()
-            """pages = []
-            for page in range(1, document.pages + 1):
-                image_data = document.get_large_image(page)
-                gif_filename = f"{document.id}-page{page}.gif"
-                with open(gif_filename, 'wb') as f:
-                    f.write(image_data)
-                png_filename = f"{document.id}-page{page}.png"
-                self.convert_to_png(gif_filename, png_filename)
-                image = Image.open(png_filename)
-                page_info = extractor.detect_document_text(file_source=image)
-
-                # Create dc_page dictionary
-                dc_page = {
-                    "page_number": page-1,
-                    "text": page_info.text,
-                    "ocr": "textract",
-                    "positions": []  # To store word positions
-                }
-                for word in page_info.words:
-                    word_info = {
-                        "text": word.text,
-                        "x1": word.bbox.x,
-                        "x2": (word.bbox.x + word.bbox.width),
-                        "y1": word.bbox.y,
-                        "y2": (word.bbox.y + word.bbox.height),
-                        "confidence": word.confidence,
-                    }
-                    dc_page["positions"].append(word_info)
-                print(dc_page)
-                # Append dc_page to pages list
-                pages.append(dc_page)
-            """
 if __name__ == "__main__":
     Textract().main()
