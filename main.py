@@ -90,7 +90,7 @@ class Textract(AddOn):
                     dc_page["positions"].append(word_info)
                 dc_pages.append(dc_page)
            
-            page_chunk_size = 100  # Set your desired chunk size
+            page_chunk_size = 50  # Set your desired chunk size
             for i in range(0, len(dc_pages), page_chunk_size):
                 chunk = dc_pages[i : i + page_chunk_size]
                 resp = self.client.patch(
