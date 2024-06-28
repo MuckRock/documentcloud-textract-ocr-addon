@@ -67,9 +67,11 @@ class Textract(AddOn):
             pdf = self.download_file(s3_url, f"{document.title}.pdf")
 
             document_info = extractor.start_document_text_detection(
-                f"s3://s3.documentcloud.org/documents/{document.id}/{document.title}.pdf"
+                "s3://s3.documentcloud.org/documents/100017/d208037434.pdf"
             )
             print(document_info)
+
+            # f"s3://s3.documentcloud.org/documents/{document.id}/{document.title}.pdf"
             """pages = []
             for page in range(1, document.pages + 1):
                 image_data = document.get_large_image(page)
