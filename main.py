@@ -73,7 +73,7 @@ class Textract(AddOn):
             dc_pages = []
             for page in document_info.pages:
                 dc_page = {
-                    "page_number": page.page_num,
+                    "page_number": page.page_num-1,
                     "text": page.text,
                     "ocr": "textract",
                     "positions": []
