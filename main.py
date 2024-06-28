@@ -64,14 +64,14 @@ class Textract(AddOn):
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
             s3_url = document.pdf_url
-            pdf = self.download_file(s3_url, f"{document.title}.pdf")
+            pdf = self.download_file(s3_url, f"{document.slug}.pdf")
 
             document_info = extractor.start_document_text_detection(
-                "s3://s3.documentcloud.org/documents/100017/d208037434.pdf", save_image=False
+                f"s3://s3.documentcloud.org/documents/{document.id}/{document.slug}.pdf"
             )
             print(document_info)
 
-            # f"s3://s3.documentcloud.org/documents/{document.id}/{document.title}.pdf"
+            
             """pages = []
             for page in range(1, document.pages + 1):
                 image_data = document.get_large_image(page)
@@ -104,7 +104,7 @@ class Textract(AddOn):
                 # Append dc_page to pages list
                 pages.append(dc_page)
             """
-            page_chunk_size = 100  # Set your desired chunk size
+            """ page_chunk_size = 100  # Set your desired chunk size
             for i in range(0, len(pages), page_chunk_size):
                 chunk = pages[i : i + page_chunk_size]
                 resp = self.client.patch(
@@ -117,9 +117,10 @@ class Textract(AddOn):
                         document.status == "success"
                     ):  # Break out of for loop if document status becomes success
                         break
+
             if to_tag:
                 document.data["ocr_engine"] = "textract"
                 document.save()
-
+            """
 if __name__ == "__main__":
     Textract().main()
