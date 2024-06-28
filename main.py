@@ -70,10 +70,43 @@ class Textract(AddOn):
                 f"s3://s3.documentcloud.org/documents/{document.id}/{document.slug}.pdf", save_image=False
             )
             
+            dc_pages = []
             for page in document_info.pages:
-                print(page.text)
+                dc_page = {
+                    "page_number": page.page_num,
+                    "text": page.text,
+                    "ocr": "textract",
+                    "positions": []
+                }
+                for word in page.words:
+                    word_info = {
+                        "text": word.text,
+                        "x1": word.bbox.x,
+                        "x2": (word.bbox.x + word.bbox.width),
+                        "y1": word.bbox.y,
+                        "y2": (word.bbox.y + word.bbox.height),
+                        "confidence": word.confidence,
+                    }
+                    dc_page["positions"].append(word_info)
+                dc_pages.append(dc_page)
+           
+            page_chunk_size = 100  # Set your desired chunk size
+            for i in range(0, len(dc_pages), page_chunk_size):
+                chunk = dc_pages[i : i + page_chunk_size]
+                resp = self.client.patch(
+                    f"documents/{document.id}/", json={"pages": chunk}
+                )
+                resp.raise_for_status()
+                while True:
+                    time.sleep(10)
+                    if (
+                        document.status == "success"
+                    ):  # Break out of for loop if document status becomes success
+                        break
 
-            
+            if to_tag:
+                document.data["ocr_engine"] = "textract"
+                document.save()
             """pages = []
             for page in range(1, document.pages + 1):
                 image_data = document.get_large_image(page)
@@ -105,24 +138,6 @@ class Textract(AddOn):
                 print(dc_page)
                 # Append dc_page to pages list
                 pages.append(dc_page)
-            """
-            """ page_chunk_size = 100  # Set your desired chunk size
-            for i in range(0, len(pages), page_chunk_size):
-                chunk = pages[i : i + page_chunk_size]
-                resp = self.client.patch(
-                    f"documents/{document.id}/", json={"pages": chunk}
-                )
-                resp.raise_for_status()
-                while True:
-                    time.sleep(10)
-                    if (
-                        document.status == "success"
-                    ):  # Break out of for loop if document status becomes success
-                        break
-
-            if to_tag:
-                document.data["ocr_engine"] = "textract"
-                document.save()
             """
 if __name__ == "__main__":
     Textract().main()
