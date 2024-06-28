@@ -69,7 +69,9 @@ class Textract(AddOn):
             document_info = extractor.start_document_text_detection(
                 f"s3://s3.documentcloud.org/documents/{document.id}/{document.slug}.pdf", save_image=False
             )
-            print(document_info)
+            
+            for page in document_info.pages:
+                print(page.text)
 
             
             """pages = []
