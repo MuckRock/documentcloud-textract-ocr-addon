@@ -82,9 +82,10 @@ class Textract(AddOn):
                 )
                 resp.raise_for_status()
                 while True:
+                    document_ref = self.client.documents.get(document.id)
                     time.sleep(10)
                     if (
-                        document.status == "success"
+                        document_ref.status == "success"
                     ):  # Break out of for loop if document status becomes success
                         break
 
