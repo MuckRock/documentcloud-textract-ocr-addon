@@ -123,7 +123,7 @@ class Textract(AddOn):
                         document_ref = self.client.documents.get(document.id)
                         if document_ref.status == "success":
                             print("Tagging document...")
-                            document.data["ocr_engine"] = "azure"
+                            document.data["ocr_engine"] = "textract"
                             document.save()
                             print("Finished tagging document")
                             break
