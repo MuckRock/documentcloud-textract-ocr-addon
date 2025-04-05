@@ -51,7 +51,8 @@ class Textract(AddOn):
         to_tag = self.data.get("to_tag", False)
         for document in self.get_documents():
             document_info = extractor.start_document_text_detection(
-                f"s3://s3.documentcloud.org/documents/{document.id}/{document.slug}.pdf", save_image=False
+                f"s3://s3.documentcloud.org/documents/{document.id}/{document.slug}.pdf", 
+                save_image=False
             )
 
             dc_pages = []
@@ -74,23 +75,66 @@ class Textract(AddOn):
                     dc_page["positions"].append(word_info)
                 dc_pages.append(dc_page)
 
-            page_chunk_size = 20 # Max allowed by the API
+            page_chunk_size = 30
+            max_retries = 5
+            retry_delay = 30
+            status_check_delay = 10
+
             for i in range(0, len(dc_pages), page_chunk_size):
                 chunk = dc_pages[i : i + page_chunk_size]
-                resp = self.client.patch(
-                    f"documents/{document.id}/", json={"pages": chunk}
-                )
-                resp.raise_for_status()
-                while True:
-                    document_ref = self.client.documents.get(document.id)
-                    time.sleep(10)
-                    if (
-                        document_ref.status == "success"
-                    ):  # Break out of for loop if document status becomes success
-                        break
+                retries = 0
 
+                while retries < max_retries:
+                    print(f"Updating the page text (pages {i} to {i + page_chunk_size})")
+                    try:
+                        resp = self.client.patch(
+                            f"documents/{document.id}/", json={"pages": chunk}
+                        )
+                        resp.raise_for_status()
+                    except APIError as exc:
+                        # Check the error message to determine if it's
+                        # because the document is still processing
+                        if "processing" in str(exc):  # Adjust based on actual error message format
+                            print(
+                                "Document is still processing, retrying... "
+                                f"(Attempt {retries + 1} of {max_retries})"
+                            )
+                            retries += 1
+                            time.sleep(retry_delay)
+                            continue
+                        # If it's another type of error, re-raise
+                        print(f"Unexpected error: {exc}. Exiting retries.")
+                        raise
+                    print("Completed updating the page text")
+                    break
+                else:
+                    print(
+                        f"Failed to update pages {i} to {i + page_chunk_size}"
+                        f" after {max_retries} attempts."
+                    )
+                    break  # Exit loop if retries exceeded
+
+            # Tagging part
             if to_tag:
-                document.data["ocr_engine"] = "textract"
-                document.save()
+                retries = 0
+                while retries < max_retries:
+                    print("Checking document status before tagging...")
+                    try:
+                        document_ref = self.client.documents.get(document.id)
+                        if document_ref.status == "success":
+                            print("Tagging document...")
+                            document.data["ocr_engine"] = "azure"
+                            document.save()
+                            print("Finished tagging document")
+                            break
+                        print(f"Document status is {document_ref.status}. Waiting for success...")
+                        time.sleep(status_check_delay)
+                    except APIError as exc:
+                        print(f"Error checking document status: {exc}. Retrying...")
+                        retries += 1
+                        time.sleep(retry_delay)
+                else:
+                    print(f"Failed to tag document after {max_retries} attempts.")
+
 if __name__ == "__main__":
     Textract().main()
