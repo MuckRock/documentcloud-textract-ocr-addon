@@ -43,6 +43,7 @@ class Textract(AddOn):
 
     def main(self):
         """The main add-on functionality goes here."""
+        self.client.session.headers.update({'User-Agent': 'Textract OCR Add-On'})
         if not self.validate():
             self.set_message("You do not have sufficient AI credits to run this Add-On")
             sys.exit(0)
